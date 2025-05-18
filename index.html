@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PassPod Verifier</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      background: #f9f9f9;
+      color: #333;
+      max-width: 600px;
+      margin: auto;
+    }
+    input, button {
+      width: 100%;
+      padding: 1em;
+      margin-top: 1em;
+      font-size: 1em;
+    }
+    .result {
+      margin-top: 2em;
+      padding: 1em;
+      border-radius: 5px;
+    }
+    .success { background: #e0ffe0; }
+    .error { background: #ffe0e0; }
+  </style>
+</head>
+<body>
+  <h2>PassPod ZK Proof Verifier</h2>
+  <p>Enter the .didx domain to check for a valid ZK credential:</p>
+
+  <input type="text" id="domain" placeholder="e.g. alice.didx" />
+  <button onclick="verifyProof()">Verify Credential</button>
+
+  <div id="output" class="result" style="display:none;"></div>
+
+  <script>
+    async function verifyProof() {
+      const domain = document.getElementById('domain').value.trim();
+      const output = document.getElementById('output');
+      output.style.display = 'none';
+
+      if (!domain) {
+        alert('Please enter a domain.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/verify?domain=' + encodeURIComponent(domain));
+        const data = await response.json();
+
+        if (data.valid) {
+          output.innerHTML = `
+            <strong>Credential Validated</strong><br>
+            Title: ${data.title}<br>
+            Issuer: ${data.issuer}<br>
+            Expiration: ${data.expiration}
+          `;
+          output.className = 'result success';
+        } else {
+          throw new Error("Invalid or expired credential.");
+        }
+      } catch (err) {
+        output.innerHTML = `Verification failed: ${err.message}`;
+        output.className = 'result error';
+      }
+
+      output.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
